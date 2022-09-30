@@ -165,8 +165,6 @@ base_ipc_us <- read_csv("../data/cpi.csv")
 
 ##### falta terminar esta parte, seguir la linea de codigo que armo arturo para employd ##
 
-## hago una prueba ###
-
 test <- blsAPI('CUSR0000SA0')
 test <- fromJSON(test)
 actualiza_ipc <- test$Results$series[[1,2]]
