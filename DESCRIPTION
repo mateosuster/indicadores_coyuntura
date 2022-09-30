@@ -1,0 +1,19 @@
+Package: indicadores
+Title: compendio de código para elaborar indicadores de coyuntura
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Diego",
+           family = "Kozlowski",
+           role = c("aut", "cre"),
+           email = "diegokoz92@gmail.com",
+           comment = c(ORCID = "0000-0002-5396-3471"))
+Description: compendio de código para elaborar indicadores de coyuntura
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+URL: https://github.com/DiegoKoz/indicadores_coyuntura
+RoxygenNote: 7.0.2
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
