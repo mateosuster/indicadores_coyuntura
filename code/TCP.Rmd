@@ -155,19 +155,15 @@ productividad_us <- employ_us %>%
 * Observaciones: todos los ítems; promedio de las ciudades de EEUU
 * ID serie: CUSR0000SA0
 
-
 ```{r}
-base_ipc_us <- read_csv("../data/cpi.csv")
-```
+#serie historica
+base_ipc_us2 <- read_csv("../data/cpi.csv")
 
-```{r}
+# API BLS
+base_ipc_us <- blsAPI('CUSR0000SA0')
+base_ipc_us <- fromJSON(base_ipc_us)
 
-
-##### falta terminar esta parte, seguir la linea de codigo que armo arturo para employd ##
-
-test <- blsAPI('CUSR0000SA0')
-test <- fromJSON(test)
-actualiza_ipc <- test$Results$series[[1,2]]
+actualiza_ipc <- base_ipc_us$Results$series[[1,2]]
 actualiza_ipc <- actualiza_ipc %>% 
   mutate("Series ID"= "CUSR0000SA0") %>% 
   select("Series ID",everything()) %>% 
@@ -177,7 +173,8 @@ actualiza_ipc <- actualiza_ipc %>%
 actualiza_ipc$Year <- as.numeric(actualiza_ipc$Year)
 actualiza_ipc$Value <- as.numeric(actualiza_ipc$Value)
 
-actualiza_ipc <- rbind(base_ipc_us,actualiza_ipc)
+# Aca unimos historica con la actualizada y eliminamos los meses duplicados
+actualiza_ipc <- rbind(select(base_ipc_us2, -Label),actualiza_ipc)
 
 actualiza_ipc <- distinct(actualiza_ipc)
 actualiza_ipc <- actualiza_ipc %>% 
@@ -189,8 +186,8 @@ Genero indice
 
 ```{r}
 
-ipc_us <- base_ipc_us %>% 
-  mutate(mes = as.double(str_remove(base_ipc_us$Period, "M")),
+ipc_us <- actualiza_ipc %>% 
+  mutate(mes = as.double(str_remove(actualiza_ipc$Period, "M")),
          fecha = ymd(parse_date_time(paste(Year, mes, sep = ""), orders = "ym")),
          i_ipc_us=generar_indice(serie = Value,
                                     fecha = fecha,
@@ -287,23 +284,24 @@ productividad_arg <- empleo_arg %>%
   full_join(ipi_manuf, by = "fecha") %>%  
   left_join(emae_tot, by = "fecha") %>% 
   filter(fecha >= "2004-01-01") %>%  
-  mutate(i_empleo_arg = na_interpolation(i_empleo_arg, option = 'linear'),
-         i_empleo_arg = imputeTS::na_locf(i_empleo_arg),
-         i_manuf_arg_2 = case_when(
-            is.na(i_manuf_arg)  ~ lag(i_manuf_arg) + lag(i_manuf_arg) * ipi_variacion,
-            TRUE ~ i_manuf_arg),
-         i_manuf_arg_3 = case_when(
-            is.na(i_manuf_arg_2)  ~ lag(i_manuf_arg_2) + lag(i_manuf_arg_2) * ipi_variacion,
-            TRUE ~ i_manuf_arg_2),
-         i_manuf_arg_4 = case_when(
-           is.na(i_manuf_arg_3)  ~ lag(i_manuf_arg_3) + lag(i_manuf_arg_3) * emae_deses_variacion,
-            TRUE ~ i_manuf_arg_3),
-         i_manuf_arg_5 = case_when(
-           is.na(i_manuf_arg_4)  ~ lag(i_manuf_arg_4) + lag(i_manuf_arg_4) * emae_deses_variacion,
-            TRUE ~ i_manuf_arg_4),
-         i_productividad_arg = i_manuf_arg_5/i_empleo_arg) %>% 
-  select(fecha, i_empleo_arg, i_manuf_arg_5, i_productividad_arg) %>% 
-  rename(i_manuf_arg = i_manuf_arg_5)  
+  mutate(i_empleo_arg = na_interpolation(i_empleo_arg, option = 'linear'))
+# ,
+#          i_empleo_arg = imputeTS::na_locf(i_empleo_arg),
+#          i_manuf_arg_2 = case_when(
+#             is.na(i_manuf_arg)  ~ lag(i_manuf_arg) + lag(i_manuf_arg) * ipi_variacion,
+#             TRUE ~ i_manuf_arg),
+#          i_manuf_arg_3 = case_when(
+#             is.na(i_manuf_arg_2)  ~ lag(i_manuf_arg_2) + lag(i_manuf_arg_2) * ipi_variacion,
+#             TRUE ~ i_manuf_arg_2),
+#          i_manuf_arg_4 = case_when(
+#            is.na(i_manuf_arg_3)  ~ lag(i_manuf_arg_3) + lag(i_manuf_arg_3) * emae_deses_variacion,
+#             TRUE ~ i_manuf_arg_3),
+#          i_manuf_arg_5 = case_when(
+#            is.na(i_manuf_arg_4)  ~ lag(i_manuf_arg_4) + lag(i_manuf_arg_4) * emae_deses_variacion,
+#             TRUE ~ i_manuf_arg_4),
+#          i_productividad_arg = i_manuf_arg_5/i_empleo_arg) %>% 
+#   select(fecha, i_empleo_arg, i_manuf_arg_5, i_productividad_arg) %>% 
+#   rename(i_manuf_arg = i_manuf_arg_5)  
 productividad_arg
 
 
